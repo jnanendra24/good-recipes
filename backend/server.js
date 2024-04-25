@@ -14,6 +14,9 @@ app.use(cors());
 
 
 //routes
+app.get("/", (req, res) => {
+  res.send("Hello World");
+});
 app.use("/auth", authRoutes);
 
 app.use("/recipe", recipeRoutes);
