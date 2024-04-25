@@ -24,3 +24,6 @@ mongoose.connect(process.env.DB_CONNECTION_URI).then(() => {
     console.log("Server running on port 5000");
   });
 });
+
+// Export the Express API to be used in serverless function by vercel.
+module.exports = app;
