@@ -1,5 +1,6 @@
 {
     "rewrites": [
+        { "source": "/api/:path(.*)", "destination": "https://good-recipes-backend.vercel.app/:path" },
       {
         "source": "/(.*)",
         "destination": "/index.html"
