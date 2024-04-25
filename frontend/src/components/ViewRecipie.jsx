@@ -1,21 +1,20 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { useUserStore } from "../stores/userStore";
+import React from "react";
 import { useParams } from "react-router-dom";
+import {useQuery} from "@tanstack/react-query";
+import { fetchRecipeById } from "../fetchers/fetchRecipes";
 
 function ViewRecipie() {
   let { id } = useParams();
-  const [recipe, setRecipe] = useState(null);
-  useEffect(() => {
-    fetchRecipe();
-  }, []);
+  const {data: recipe, isLoading, error} = useQuery({
+    queryKey: ["recipe", id],
+    queryFn: () => fetchRecipeById(id),
+    retry: 2,
+  })
 
-  const fetchRecipe = async () => {
-    const res = await axios.get(`/api/recipe/${id}`);
-    setRecipe(res.data);
-  };
   return (
     <div>
+      {isLoading && <span>Loading...</span>}
+      {error && <span>{error.message}</span>}
       {recipe && (
         <div className="w-10/12 m-auto">
           <div className="flex items-center m-4">

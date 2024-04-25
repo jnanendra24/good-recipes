@@ -1,34 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/userStore";
-import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import { fetchMyRecipes } from "../fetchers/fetchRecipes";
 import RecipeCard from "./RecipeCard";
 
 function MyRecipies() {
-  const { user, setUser } = useUserStore((state) => ({
+  const { user } = useUserStore((state) => ({
     user: state.user,
-    setUser: state.setUser,
   }));
-  const [recipes, setRecipes] = useState(null);
+
   const navigate = useNavigate();
+
   useEffect(() => {
     if (!user) {
       navigate("/login");
-    } else {
-      fetchMyRecipes();
     }
   }, [user]);
 
-  const fetchMyRecipes = async () => {
-    const res = await axios.get(`/api/recipe/user/${user._id}`);
-    console.log(res.data);
-    setRecipes(res.data);
-  };
+  const {
+    data: myRecipes,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["myRecipes", user?._id],
+    queryFn: () => fetchMyRecipes(user._id),
+  });
+
   return (
     <div>
+      {isLoading && <div>Loading...</div>}
+      {error && <div>Error: {error.message}</div>}
+      {myRecipes && myRecipes.length === 0 && <div>No recipes found</div>}
       <div className="m-4 grid grid-cols-5 space-x-4 space-y-4 w-fit">
-        {recipes &&
-          recipes.map((recipe, index) => {
+        {myRecipes &&
+          myRecipes.map((recipe, index) => {
             return (
               <RecipeCard
                 key={index}

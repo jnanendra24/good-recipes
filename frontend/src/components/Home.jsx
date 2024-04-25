@@ -1,23 +1,19 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import RecipeCard from "./RecipeCard";
+import { fetchAllRecipes } from "../fetchers/fetchRecipes";
+
 const Home = () => {
-  const [recipes, setRecipes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    fetchRecipes();
-  }, []);
-
-
-  const fetchRecipes = async () => {
-    const res = await axios.get("/api/recipe/all")
-    setRecipes(res.data);
-  }
-
+  const {data: recipes, isLoading , error} = useQuery({
+    queryKey: ["recipes"],
+    queryFn: fetchAllRecipes,
+    retry: 1,
+  })
 
   return (
     <div>
+      {isLoading && <span>Loading....</span>}
+      {error && <span>{error.message}</span>}
       <div className="m-auto grid grid-cols-5 space-x-4 space-y-4 w-fit">
         {recipes &&
           recipes.map((recipe, index) => {

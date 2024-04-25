@@ -28,5 +28,5 @@ mongoose.connect(process.env.DB_CONNECTION_URI).then(() => {
   });
 });
 
-//export express app to use by vercel
+// Export the Express API to be used in serverless function by vercel.
 module.exports = app;

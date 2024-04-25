@@ -2,19 +2,28 @@ import React, { useEffect, useState } from "react";
 import { useUserStore } from "../stores/userStore";
 import { useNavigate } from "react-router-dom";
 import { MdDelete } from "react-icons/md";
-import axios from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addRecipe } from "../fetchers/fetchRecipes";
 
 function AddRecipe() {
   const navigate = useNavigate();
-  const { user, setUser } = useUserStore((state) => ({
+
+  const { user } = useUserStore((state) => ({
     user: state.user,
-    setUser: state.setUser,
   }));
-  useEffect(() => {
-    if (!user) {
-      navigate("/login");
-    }
-  }, [user]);
+
+  const queryClient = useQueryClient();
+
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: ([newRecipe, user]) => addRecipe(newRecipe, user),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["recipes"],
+      });
+      navigate("/");
+    },
+  });
+
   const [recipe, setRecipe] = useState({
     name: "",
     procedure: "",
@@ -22,6 +31,12 @@ function AddRecipe() {
     image: "",
     ingredients: [{ name: "", quantity: "" }],
   });
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user]);
 
   const handleInputChange = (event) => {
     setRecipe({ ...recipe, [event.target.name]: event.target.value });
@@ -59,21 +74,17 @@ function AddRecipe() {
     };
     reader.readAsDataURL(file);
   };
-  const addRecipe = async () => {
-    recipe.user = user._id;
-    recipe.createdBy = user.username;
-    const res = await axios.post("/api/recipe/add", recipe);
-    navigate("/my-recipes");
-  };
+
   return (
     <div className="flex justify-center items-center mt-4">
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          addRecipe();
+          mutate([recipe, user]);
         }}
         className="flex flex-col w-1/2 space-y-2 border-2 shadow-md p-4 rounded-sm"
       >
+        {error && <span>{error.message}</span>}
         <input
           className=" border-b-2 focus:outline-none focus:border-slate-500 "
           type="text"
@@ -100,8 +111,12 @@ function AddRecipe() {
               value={ingredient.quantity}
               onChange={(event) => handleIngredientChange(index, event)}
             />
-            <button type="button" className="text-xl hover:scale-110" onClick={() => handleRemoveFields(index)}>
-            <MdDelete />
+            <button
+              type="button"
+              className="text-xl hover:scale-110"
+              onClick={() => handleRemoveFields(index)}
+            >
+              <MdDelete />
             </button>
           </div>
         ))}
@@ -131,6 +146,7 @@ function AddRecipe() {
         <button
           type="submit"
           className="w-fit p-2 bg-slate-500 text-white rounded-md"
+          disabled={isPending}
         >
           Add Recipe
         </button>
